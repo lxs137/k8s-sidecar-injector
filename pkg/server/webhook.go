@@ -148,10 +148,15 @@ func (whsvr *WebhookServer) getSidecarConfigurationRequested(ignoredList []strin
 		return "", ErrSkipAlreadyInjected
 	}
 
-	// determine whether to perform mutation based on annotation for the target resource
-	requestedInjection, ok := annotations[requestAnnotationKey]
+	// determine whether to perform mutation based on label for the target resource
+	labels := metadata.GetLabels()
+	if labels == nil {
+		labels = map[string]string{}
+	}
+
+	requestedInjection, ok := labels[requestAnnotationKey]
 	if !ok {
-		glog.Infof("Pod %s/%s annotation %s is missing, skipping injection", metadata.Namespace, metadata.Name, statusAnnotationKey)
+		glog.Infof("Pod %s/%s labels %s is missing, skipping injection", metadata.Namespace, metadata.Name, requestAnnotationKey)
 		return "", ErrMissingRequestAnnotation
 	}
 	injectionKey := strings.ToLower(requestedInjection)
@@ -159,6 +164,18 @@ func (whsvr *WebhookServer) getSidecarConfigurationRequested(ignoredList []strin
 		glog.Errorf("Mutation policy for pod %s/%s: requested injection %s was not in configuration, skipping", metadata.Namespace, metadata.Name, requestedInjection)
 		return requestedInjection, ErrRequestedSidecarNotFound
 	}
+
+	// determine whether to perform mutation based on annotation for the target resource
+	// requestedInjection, ok := annotations[requestAnnotationKey]
+	// if !ok {
+	// 	glog.Infof("Pod %s/%s annotation %s is missing, skipping injection", metadata.Namespace, metadata.Name, statusAnnotationKey)
+	// 	return "", ErrMissingRequestAnnotation
+	// }
+	// injectionKey := strings.ToLower(requestedInjection)
+	// if !whsvr.Config.HasInjectionConfig(requestedInjection) {
+	// 	glog.Errorf("Mutation policy for pod %s/%s: requested injection %s was not in configuration, skipping", metadata.Namespace, metadata.Name, requestedInjection)
+	// 	return requestedInjection, ErrRequestedSidecarNotFound
+	// }
 
 	glog.Infof("Pod %s/%s annotation %s=%s requesting sidecar config %s", metadata.Namespace, metadata.Name, requestAnnotationKey, requestedInjection, injectionKey)
 	return injectionKey, nil
