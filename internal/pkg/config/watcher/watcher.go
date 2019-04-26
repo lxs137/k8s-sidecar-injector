@@ -102,10 +102,13 @@ func (c *K8sConfigMapWatcher) Watch(ctx context.Context, notifyMe chan<- interfa
 		return fmt.Errorf("unable to create watcher (possible serviceaccount RBAC/ACL failure?): %s", err.Error())
 	}
 	ch := watcher.ResultChan()
-	var e watch.Event
 	for {
 		select {
-		case e = <-ch:
+		case e := <-ch:
+			if e == nil {
+				glog.V(2).Errorf("nil event")
+				break
+			}
 			glog.V(3).Infof("event: %s %s", e.Type, e.Object.GetObjectKind())
 			switch e.Type {
 			case watch.Added:
