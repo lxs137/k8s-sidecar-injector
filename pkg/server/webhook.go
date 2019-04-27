@@ -148,13 +148,24 @@ func (whsvr *WebhookServer) getSidecarConfigurationRequested(ignoredList []strin
 		return "", ErrSkipAlreadyInjected
 	}
 
-	// determine whether to perform mutation based on label for the target resource
+	// first, determine whether to perform mutation based on label for the target resource
 	labels := metadata.GetLabels()
 	if labels == nil {
 		labels = map[string]string{}
 	}
+	requestLabelKey := whsvr.Config.AnnotationNamespace + "/request"
+	if requestedInjection, ok := labels[requestLabelKey]; ok {
+		injectionKey := strings.ToLower(requestedInjection)
+		if !whsvr.Config.HasInjectionConfig(requestedInjection) {
+			glog.Errorf("Mutation policy for pod %s/%s: requested injection %s was not in configuration, skipping", metadata.Namespace, metadata.Name, requestedInjection)
+			return requestedInjection, ErrRequestedSidecarNotFound
+		}
+		glog.Infof("Pod %s/%s label %s=%s requesting sidecar config %s", metadata.Namespace, metadata.Name, requestLabelKey, requestedInjection, injectionKey)
+		return injectionKey, nil
+	}
 
-	requestedInjection, ok := labels[requestAnnotationKey]
+	// determine whether to perform mutation based on annotation for the target resource
+	requestedInjection, ok := annotations[requestAnnotationKey]
 	if !ok {
 		glog.Infof("Pod %s/%s labels %s is missing, skipping injection", metadata.Namespace, metadata.Name, requestAnnotationKey)
 		return "", ErrMissingRequestAnnotation
@@ -165,28 +176,28 @@ func (whsvr *WebhookServer) getSidecarConfigurationRequested(ignoredList []strin
 		return requestedInjection, ErrRequestedSidecarNotFound
 	}
 
-	// determine whether to perform mutation based on annotation for the target resource
-	// requestedInjection, ok := annotations[requestAnnotationKey]
-	// if !ok {
-	// 	glog.Infof("Pod %s/%s annotation %s is missing, skipping injection", metadata.Namespace, metadata.Name, statusAnnotationKey)
-	// 	return "", ErrMissingRequestAnnotation
-	// }
-	// injectionKey := strings.ToLower(requestedInjection)
-	// if !whsvr.Config.HasInjectionConfig(requestedInjection) {
-	// 	glog.Errorf("Mutation policy for pod %s/%s: requested injection %s was not in configuration, skipping", metadata.Namespace, metadata.Name, requestedInjection)
-	// 	return requestedInjection, ErrRequestedSidecarNotFound
-	// }
-
 	glog.Infof("Pod %s/%s annotation %s=%s requesting sidecar config %s", metadata.Namespace, metadata.Name, requestAnnotationKey, requestedInjection, injectionKey)
 	return injectionKey, nil
 }
 
-func setEnvironment(target []corev1.Container, addedEnv []corev1.EnvVar) (patch []patchOperation) {
+func shouldInjectToContainer(target *corev1.Container, selector config.Selector) bool {
+	for _, name := range selector {
+		if target.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func setEnvironment(target []corev1.Container, addedEnvConfig config.EnvInjection) (patch []patchOperation) {
 	var value interface{}
 	for containerIndex, container := range target {
+		if !shouldInjectToContainer(&container, addedEnvConfig.ContainerSelector) {
+			continue
+		}
 		// for each container in the spec, determine if we want to patch with any env vars
 		first := len(container.Env) == 0
-		for _, add := range addedEnv {
+		for _, add := range addedEnvConfig.Environment {
 			path := fmt.Sprintf("/spec/containers/%d/env", containerIndex)
 			hasKey := false
 			// make sure we dont override any existing env vars; we only add, dont replace
@@ -279,12 +290,15 @@ func addVolumes(target, added []corev1.Volume, basePath string) (patch []patchOp
 	return patch
 }
 
-func addVolumeMounts(target []corev1.Container, addedVolumeMounts []corev1.VolumeMount) (patch []patchOperation) {
+func addVolumeMounts(target []corev1.Container, addedVolumeMountsConfig config.VolumeMountInjection) (patch []patchOperation) {
 	var value interface{}
 	for containerIndex, container := range target {
+		if !shouldInjectToContainer(&container, addedVolumeMountsConfig.ContainerSelector) {
+			continue
+		}
 		// for each container in the spec, determine if we want to patch with any volume mounts
 		first := len(container.VolumeMounts) == 0
-		for _, add := range addedVolumeMounts {
+		for _, add := range addedVolumeMountsConfig.VolumeMounts {
 			path := fmt.Sprintf("/spec/containers/%d/volumeMounts", containerIndex)
 			hasKey := false
 			// make sure we dont override any existing volume mounts; we only add, dont replace
@@ -347,10 +361,13 @@ func enableShareProcessNamespace() (patch []patchOperation) {
 // for containers, add any env vars that are not already defined in the Env list.
 // this does _not_ return patches; this is intended to be used only on containers defined
 // in the injection config, so the resources do not exist yet in the k8s api (thus no patch needed)
-func mergeEnvVars(envs []corev1.EnvVar, containers []corev1.Container) []corev1.Container {
+func mergeEnvVars(envConfig config.EnvInjection, containers []corev1.Container) []corev1.Container {
 	mutatedContainers := []corev1.Container{}
 	for _, c := range containers {
-		for _, newEnv := range envs {
+		if !shouldInjectToContainer(&c, envConfig.ContainerSelector) {
+			continue
+		}
+		for _, newEnv := range envConfig.Environment {
 			// check each container for each env var by name.
 			// if the container has a matching name, dont override!
 			skip := false
@@ -369,10 +386,13 @@ func mergeEnvVars(envs []corev1.EnvVar, containers []corev1.Container) []corev1.
 	return mutatedContainers
 }
 
-func mergeVolumeMounts(volumeMounts []corev1.VolumeMount, containers []corev1.Container) []corev1.Container {
+func mergeVolumeMounts(volumeMountsConfig config.VolumeMountInjection, containers []corev1.Container) []corev1.Container {
 	mutatedContainers := []corev1.Container{}
 	for _, c := range containers {
-		for _, newVolumeMount := range volumeMounts {
+		if !shouldInjectToContainer(&c, volumeMountsConfig.ContainerSelector) {
+			continue
+		}
+		for _, newVolumeMount := range volumeMountsConfig.VolumeMounts {
 			// check each container for each volume mount by name.
 			// if the container has a matching name, dont override!
 			skip := false
