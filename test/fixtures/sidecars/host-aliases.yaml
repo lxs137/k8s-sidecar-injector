@@ -16,11 +16,14 @@ hostAliases:
   - ip: 4.3.2.1
   - ip: 4.3.2.1
     hostnames:
-env:
-  - name: DATACENTER
-    value: foo
-  - name: FROM_INJECTOR
-    value: bar
+envInjection:
+  containerSelector:
+    - compute
+  env:
+    - name: DATACENTER
+      value: foo
+    - name: FROM_INJECTOR
+      value: bar
 containers:
 - name: sidecar-add-vm
   image: nginx:1.12.2

@@ -170,8 +170,8 @@ func TestLoadFromConfigMap(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to load expected fixture %s: %s", expectedicFile, err.Error())
 			}
-			if len(ic.Environment) != expectedICF.envCount {
-				t.Fatalf("expected %d environment variables in %s, but found %d", expectedICF.envCount, expectedICF.name, len(ic.Environment))
+			if len(ic.Environment.Environment) != expectedICF.envCount {
+				t.Fatalf("expected %d environment variables in %s, but found %d", expectedICF.envCount, expectedICF.name, len(ic.Environment.Environment))
 			}
 			if len(ic.Containers) != expectedICF.containerCount {
 				t.Fatalf("expected %d containers in %s, but found %d", expectedICF.containerCount, expectedICF.name, len(ic.Containers))
@@ -179,8 +179,8 @@ func TestLoadFromConfigMap(t *testing.T) {
 			if len(ic.Volumes) != expectedICF.volumeCount {
 				t.Fatalf("expected %d volumes in %s, but found %d", expectedICF.volumeCount, expectedICF.name, len(ic.Volumes))
 			}
-			if len(ic.VolumeMounts) != expectedICF.volumeMountCount {
-				t.Fatalf("expected %d volume mounts in %s, but found %d", expectedICF.volumeMountCount, expectedICF.name, len(ic.VolumeMounts))
+			if len(ic.VolumeMounts.VolumeMounts) != expectedICF.volumeMountCount {
+				t.Fatalf("expected %d volume mounts in %s, but found %d", expectedICF.volumeMountCount, expectedICF.name, len(ic.VolumeMounts.VolumeMounts))
 			}
 			if len(ic.HostAliases) != expectedICF.hostAliasCount {
 				t.Fatalf("expected %d host aliases in %s, but found %d", expectedICF.hostAliasCount, expectedICF.name, len(ic.HostAliases))

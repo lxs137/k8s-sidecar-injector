@@ -1,12 +1,18 @@
 name: volume-mounts
-volumeMounts:
-  - name: test-vol
-    mountPath: /tmp/test
-env:
-  - name: DATACENTER
-    value: foo
-  - name: FROM_INJECTOR
-    value: bar
+volumeMountsInjection:
+  containerSelector:
+    - compute
+  volumeMounts:
+    - name: test-vol
+      mountPath: /tmp/test
+envInjection:
+  containerSelector:
+    - compute
+  env:
+    - name: DATACENTER
+      value: foo
+    - name: FROM_INJECTOR
+      value: bar
 containers:
 - name: sidecar-add-vm
   image: nginx:1.12.2

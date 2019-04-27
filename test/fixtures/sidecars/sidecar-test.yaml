@@ -1,10 +1,13 @@
 ---
 name: sidecar-test
-env:
-  - name: DATACENTER
-    value: foo
-  - name: FROM_INJECTOR
-    value: bar
+envInjection:
+  containerSelector:
+    - compute
+  env:
+    - name: DATACENTER
+      value: foo
+    - name: FROM_INJECTOR
+      value: bar
 containers:
 - name: sidecar-nginx
   image: nginx:1.12.2

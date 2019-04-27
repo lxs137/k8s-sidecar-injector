@@ -99,8 +99,8 @@ func TestConfigs(t *testing.T) {
 			t.Errorf("expected %s Name loaded from %s but got %s", testConfig.name, testConfig.path, c.Name)
 			t.Fail()
 		}
-		if len(c.Environment) != testConfig.expectedEnvVarCount {
-			t.Errorf("expected %d EnvVars loaded from %s but got %d", testConfig.expectedEnvVarCount, testConfig.path, len(c.Environment))
+		if len(c.Environment.Environment) != testConfig.expectedEnvVarCount {
+			t.Errorf("expected %d EnvVars loaded from %s but got %d", testConfig.expectedEnvVarCount, testConfig.path, len(c.Environment.Environment))
 			t.Fail()
 		}
 		if len(c.Containers) != testConfig.expectedContainerCount {
@@ -111,8 +111,8 @@ func TestConfigs(t *testing.T) {
 			t.Errorf("expected %d Volumes loaded from %s but got %d", testConfig.expectedVolumeCount, testConfig.path, len(c.Volumes))
 			t.Fail()
 		}
-		if len(c.VolumeMounts) != testConfig.expectedVolumeMountCount {
-			t.Fatalf("expected %d VolumeMounts loaded from %s but got %d", testConfig.expectedVolumeMountCount, testConfig.path, len(c.VolumeMounts))
+		if len(c.VolumeMounts.VolumeMounts) != testConfig.expectedVolumeMountCount {
+			t.Fatalf("expected %d VolumeMounts loaded from %s but got %d", testConfig.expectedVolumeMountCount, testConfig.path, len(c.VolumeMounts.VolumeMounts))
 		}
 		if len(c.HostAliases) != testConfig.expectedHostAliasCount {
 			t.Fatalf("expected %d HostAliases loaded from %s but got %d", testConfig.expectedHostAliasCount, testConfig.path, len(c.HostAliases))
@@ -151,8 +151,8 @@ func TestGetInjectionConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(i.Environment) != cfg.expectedEnvVarCount {
-		t.Fatalf("expected %d envvars, but got %d", cfg.expectedEnvVarCount, len(i.Environment))
+	if len(i.Environment.Environment) != cfg.expectedEnvVarCount {
+		t.Fatalf("expected %d envvars, but got %d", cfg.expectedEnvVarCount, len(i.Environment.Environment))
 	}
 	if len(i.Containers) != cfg.expectedContainerCount {
 		t.Fatalf("expected %d container, but got %d", cfg.expectedContainerCount, len(i.Containers))
@@ -160,8 +160,8 @@ func TestGetInjectionConfig(t *testing.T) {
 	if len(i.Volumes) != cfg.expectedVolumeCount {
 		t.Fatalf("expected %d volume, but got %d", cfg.expectedVolumeCount, len(i.Volumes))
 	}
-	if len(i.VolumeMounts) != cfg.expectedVolumeMountCount {
-		t.Fatalf("expected %d VolumeMounts, but got %d", cfg.expectedVolumeMountCount, len(i.VolumeMounts))
+	if len(i.VolumeMounts.VolumeMounts) != cfg.expectedVolumeMountCount {
+		t.Fatalf("expected %d VolumeMounts, but got %d", cfg.expectedVolumeMountCount, len(i.VolumeMounts.VolumeMounts))
 	}
 	if len(i.HostAliases) != cfg.expectedHostAliasCount {
 		t.Fatalf("expected %d HostAliases, but got %d", cfg.expectedHostAliasCount, len(i.HostAliases))
