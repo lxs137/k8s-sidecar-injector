@@ -99,7 +99,7 @@ func TestLoadConfig(t *testing.T) {
 	}
 }
 
-func patchPod(originPodPath string, patchFunc func(*v1.Pod) ([]byte, error)) (*v1.Pod ,error) {
+func patchPod(originPodPath string, patchFunc func(*v1.Pod) ([]byte, error)) (*v1.Pod, error) {
 	podDataYaml, err := ioutil.ReadFile(originPodPath)
 	if err != nil {
 		return nil, err
