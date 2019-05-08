@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debian-debug
+  annotations:
+    injector.droidvirt.io/request: "env1"
+spec:
+  volumes:
+    - name: test-mount
+      hostPath:
+        path: /test
+  containers:
+    - image: busybox:latest
+      name: compute
+      volumeMounts:
+        - name: test-mount
+          mountPath: /test

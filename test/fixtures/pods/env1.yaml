@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debian-debug
+  annotations:
+    injector.droidvirt.io/request: "env1"
+spec:
+  containers:
+    - image: busybox:latest
+      name: compute
+      env:
+        - name: TEST_ENV
+          value: "test"
