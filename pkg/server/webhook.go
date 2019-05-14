@@ -142,13 +142,14 @@ func (whsvr *WebhookServer) getSidecarConfigurationRequested(ignoredList []strin
 	statusAnnotationKey := whsvr.Config.AnnotationNamespace + "/status"
 	requestAnnotationKey := whsvr.Config.AnnotationNamespace + "/request"
 
+	// first, determine whether to perform mutation based on annotation for the target resource
 	status, ok := annotations[statusAnnotationKey]
 	if ok && strings.ToLower(status) == StatusInjected {
 		glog.Infof("Pod %s/%s annotation %s=%s indicates injection already satisfied, skipping", metadata.Namespace, metadata.Name, statusAnnotationKey, status)
 		return "", ErrSkipAlreadyInjected
 	}
 
-	// first, determine whether to perform mutation based on label for the target resource
+	// second, determine whether to perform mutation based on label for the target resource
 	labels := metadata.GetLabels()
 	if labels == nil {
 		labels = map[string]string{}
@@ -442,6 +443,11 @@ func createPatch(pod *corev1.Pod, inj *config.InjectionConfig, annotations map[s
 	mutatedInjectedContainers := mergeEnvVars(inj.Environment, inj.Containers)
 	mutatedInjectedContainers = mergeVolumeMounts(inj.VolumeMounts, mutatedInjectedContainers)
 
+	// next, make sure any injected init containers in our config get the EnvVars and VolumeMounts injected
+	// this mutates inj.InitContainers with our environment vars
+	mutatedInjectedInitContainers := mergeEnvVars(inj.Environment, inj.InitContainers)
+	mutatedInjectedInitContainers = mergeVolumeMounts(inj.VolumeMounts, mutatedInjectedInitContainers)
+
 	// next, patch containers with our injected containers
 	patch = append(patch, addContainers(pod.Spec.Containers, mutatedInjectedContainers, "/spec/containers")...)
 
@@ -450,7 +456,7 @@ func createPatch(pod *corev1.Pod, inj *config.InjectionConfig, annotations map[s
 	patch = append(patch, addVolumeMounts(pod.Spec.Containers, inj.VolumeMounts)...)
 
 	// now, add initContainers, hostAliases and volumes
-	patch = append(patch, addContainers(pod.Spec.InitContainers, inj.InitContainers, "/spec/initContainers")...)
+	patch = append(patch, addContainers(pod.Spec.InitContainers, mutatedInjectedInitContainers, "/spec/initContainers")...)
 	patch = append(patch, addHostAliases(pod.Spec.HostAliases, inj.HostAliases, "/spec/hostAliases")...)
 	patch = append(patch, addVolumes(pod.Spec.Volumes, inj.Volumes, "/spec/volumes")...)
 
