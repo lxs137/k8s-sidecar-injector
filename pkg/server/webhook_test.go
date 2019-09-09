@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"k8s.io/api/core/v1"
 	"net/http"
@@ -195,8 +196,45 @@ func TestPatchVolumeMounts(t *testing.T) {
 	}
 	t.Logf("After mutate: %s", mutatePod)
 
-	if len(mutatePod.Spec.Volumes) != 2 || len(mutatePod.Spec.Containers[0].VolumeMounts) != 2 {
-		t.Errorf("Patch error, expect 2 volumes, got %d; expect 2 volumeMounts, got %d", len(mutatePod.Spec.Volumes), len(mutatePod.Spec.Containers[0].VolumeMounts))
+	if len(mutatePod.Spec.Volumes) != 3 || len(mutatePod.Spec.Containers[0].VolumeMounts) != 2 {
+		t.Errorf("Patch error, expect 3 volumes, got %d; expect 2 volumeMounts, got %d", len(mutatePod.Spec.Volumes), len(mutatePod.Spec.Containers[0].VolumeMounts))
+		t.Fail()
+	}
+}
+
+func TestPatchComplex(t *testing.T) {
+	configData, err := ioutil.ReadFile("test/fixtures/sidecars/complex.yaml")
+	if err != nil {
+		t.Errorf("unable to load pod yaml: %v", err)
+		t.Fail()
+	}
+
+	var injConfig *config.InjectionConfig
+	if err := yaml.Unmarshal(configData, &injConfig); err != nil {
+		t.Errorf("unable to unmarshal config yaml: %v", err)
+		t.Fail()
+	}
+	patchFunc := func(pod *v1.Pod) ([]byte, error) {
+		patchData, err := createPatch(pod, injConfig, map[string]string{
+			"injector.droidvirt.io/request": "complex",
+		})
+		var patch []patchOperation
+		if err := json.Unmarshal(patchData, &patch); err != nil {
+			t.Errorf("Broken patch data: %v", err)
+		}
+		t.Logf("patch is: %+v", patch)
+		return patchData, err
+	}
+
+	mutatePod, err := patchPod("test/fixtures/pods/complex.yaml", patchFunc)
+	if err != nil {
+		t.Errorf("unable to patch pod: %s", err)
+		t.Fail()
+	}
+	t.Logf("After mutate: %s", mutatePod)
+
+	if len(mutatePod.Spec.Containers) != 3 || len(mutatePod.Spec.Volumes) != 2 {
+		t.Errorf("Patch error, expect 3 containers, got %d; expect 2 volumes, got %d", len(mutatePod.Spec.Containers), len(mutatePod.Spec.Volumes))
 		t.Fail()
 	}
 }
