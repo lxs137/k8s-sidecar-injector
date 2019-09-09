@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: debian-debug
   annotations:
-    injector.droidvirt.io/request: "env1"
+    injector.droidvirt.io/request: "volume-mounts"
 spec:
   volumes:
     - name: test-mount

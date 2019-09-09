@@ -7,7 +7,8 @@ metadata:
 data:
   test-tumblr1: |
     name: env1
-    env:
+    envInjection:
+      env:
       - name: FOO_BAR
         value: "something interesting"
       - name: DATACENTER

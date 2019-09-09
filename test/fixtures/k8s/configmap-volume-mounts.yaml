@@ -7,10 +7,12 @@ metadata:
 data:
   test-tumblr1: |
     name: volume-mounts
-    volumeMounts:
+    volumeMountsInjection:
+      volumeMounts:
       - name: test-vol
         mountPath: /tmp/test
-    env:
+    envInjection:
+      env:
       - name: DATACENTER
         value: foo
       - name: FROM_INJECTOR

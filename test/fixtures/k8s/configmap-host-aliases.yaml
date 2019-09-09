@@ -24,7 +24,8 @@ data:
       - ip: 4.3.2.1
       - ip: 4.3.2.1
         hostnames:
-    env:
+    envInjection:
+      env:
       - name: DATACENTER
         value: foo
       - name: FROM_INJECTOR

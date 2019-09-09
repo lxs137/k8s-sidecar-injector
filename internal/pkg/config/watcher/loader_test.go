@@ -145,6 +145,7 @@ func TestLoadFromConfigMap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		t.Logf("injection configs from configmap: %+v", ics)
 		if len(ics) != len(expectedFixtures) {
 			t.Fatalf("expected %d injection configs loaded from %s, but got %d", len(expectedFixtures), fname, len(ics))
 		}
@@ -170,6 +171,7 @@ func TestLoadFromConfigMap(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to load expected fixture %s: %s", expectedicFile, err.Error())
 			}
+			t.Logf("injection config from sidecar: %+v", ic)
 			if len(ic.Environment.Environment) != expectedICF.envCount {
 				t.Fatalf("expected %d environment variables in %s, but found %d", expectedICF.envCount, expectedICF.name, len(ic.Environment.Environment))
 			}
