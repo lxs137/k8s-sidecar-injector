@@ -30,14 +30,14 @@ var (
 
 // InjectionConfig is a specific instance of a injected config, for a given annotation
 type InjectionConfig struct {
-	Name                  string               `json:"name"`
-	Containers            []corev1.Container   `json:"containers"`
-	Volumes               []corev1.Volume      `json:"volumes"`
-	Environment           EnvInjection         `json:"envInjection"`
-	VolumeMounts          VolumeMountInjection `json:"volumeMountsInjection"`
-	HostAliases           []corev1.HostAlias   `json:"hostAliases"`
-	InitContainers        []corev1.Container   `json:"initContainers"`
-	ShareProcessNamespace bool                 `json:"shareProcessNamespace"`
+	Name                  string                `json:"name"`
+	Containers            []corev1.Container    `json:"containers"`
+	Volumes               []corev1.Volume       `json:"volumes"`
+	Environment           EnvInjection          `json:"envInjection"`
+	VolumeMounts          VolumeMountsInjection `json:"volumeMountsInjection"`
+	HostAliases           []corev1.HostAlias    `json:"hostAliases"`
+	InitContainers        []corev1.Container    `json:"initContainers"`
+	ShareProcessNamespace bool                  `json:"shareProcessNamespace"`
 }
 
 // Selector by container names
@@ -45,13 +45,13 @@ type Selector []string
 
 // EnvInjection can selector which container to inject
 type EnvInjection struct {
-	ContainerSelector Selector        `json:"containerSelector"`
+	ContainerSelector Selector        `json:"containerSelector,omitempty"`
 	Environment       []corev1.EnvVar `json:"env"`
 }
 
-// VolumeMountInjection can selector which container to inject
-type VolumeMountInjection struct {
-	ContainerSelector Selector             `json:"containerSelector"`
+// VolumeMountsInjection can selector which container to inject
+type VolumeMountsInjection struct {
+	ContainerSelector Selector             `json:"containerSelector,omitempty"`
 	VolumeMounts      []corev1.VolumeMount `json:"volumeMounts"`
 }
 

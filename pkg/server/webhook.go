@@ -182,6 +182,9 @@ func (whsvr *WebhookServer) getSidecarConfigurationRequested(ignoredList []strin
 }
 
 func shouldInjectToContainer(target *corev1.Container, selector config.Selector) bool {
+	if selector == nil {
+		return true
+	}
 	for _, name := range selector {
 		if target.Name == name {
 			return true
@@ -291,7 +294,7 @@ func addVolumes(target, added []corev1.Volume, basePath string) (patch []patchOp
 	return patch
 }
 
-func addVolumeMounts(target []corev1.Container, addedVolumeMountsConfig config.VolumeMountInjection) (patch []patchOperation) {
+func addVolumeMounts(target []corev1.Container, addedVolumeMountsConfig config.VolumeMountsInjection) (patch []patchOperation) {
 	var value interface{}
 	for containerIndex, container := range target {
 		if !shouldInjectToContainer(&container, addedVolumeMountsConfig.ContainerSelector) {
@@ -387,7 +390,7 @@ func mergeEnvVars(envConfig config.EnvInjection, containers []corev1.Container) 
 	return mutatedContainers
 }
 
-func mergeVolumeMounts(volumeMountsConfig config.VolumeMountInjection, containers []corev1.Container) []corev1.Container {
+func mergeVolumeMounts(volumeMountsConfig config.VolumeMountsInjection, containers []corev1.Container) []corev1.Container {
 	mutatedContainers := []corev1.Container{}
 	for _, c := range containers {
 		if !shouldInjectToContainer(&c, volumeMountsConfig.ContainerSelector) {
