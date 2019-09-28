@@ -368,21 +368,20 @@ func enableShareProcessNamespace() (patch []patchOperation) {
 func mergeEnvVars(envConfig config.EnvInjection, containers []corev1.Container) []corev1.Container {
 	mutatedContainers := []corev1.Container{}
 	for _, c := range containers {
-		if !shouldInjectToContainer(&c, envConfig.ContainerSelector) {
-			continue
-		}
-		for _, newEnv := range envConfig.Environment {
-			// check each container for each env var by name.
-			// if the container has a matching name, dont override!
-			skip := false
-			for _, origEnv := range c.Env {
-				if origEnv.Name == newEnv.Name {
-					skip = true
-					break
+		if shouldInjectToContainer(&c, envConfig.ContainerSelector) {
+			for _, newEnv := range envConfig.Environment {
+				// check each container for each env var by name.
+				// if the container has a matching name, dont override!
+				skip := false
+				for _, origEnv := range c.Env {
+					if origEnv.Name == newEnv.Name {
+						skip = true
+						break
+					}
 				}
-			}
-			if !skip {
-				c.Env = append(c.Env, newEnv)
+				if !skip {
+					c.Env = append(c.Env, newEnv)
+				}
 			}
 		}
 		mutatedContainers = append(mutatedContainers, c)
@@ -393,21 +392,20 @@ func mergeEnvVars(envConfig config.EnvInjection, containers []corev1.Container) 
 func mergeVolumeMounts(volumeMountsConfig config.VolumeMountsInjection, containers []corev1.Container) []corev1.Container {
 	mutatedContainers := []corev1.Container{}
 	for _, c := range containers {
-		if !shouldInjectToContainer(&c, volumeMountsConfig.ContainerSelector) {
-			continue
-		}
-		for _, newVolumeMount := range volumeMountsConfig.VolumeMounts {
-			// check each container for each volume mount by name.
-			// if the container has a matching name, dont override!
-			skip := false
-			for _, origVolumeMount := range c.VolumeMounts {
-				if origVolumeMount.Name == newVolumeMount.Name {
-					skip = true
-					break
+		if shouldInjectToContainer(&c, volumeMountsConfig.ContainerSelector) {
+			for _, newVolumeMount := range volumeMountsConfig.VolumeMounts {
+				// check each container for each volume mount by name.
+				// if the container has a matching name, dont override!
+				skip := false
+				for _, origVolumeMount := range c.VolumeMounts {
+					if origVolumeMount.Name == newVolumeMount.Name {
+						skip = true
+						break
+					}
 				}
-			}
-			if !skip {
-				c.VolumeMounts = append(c.VolumeMounts, newVolumeMount)
+				if !skip {
+					c.VolumeMounts = append(c.VolumeMounts, newVolumeMount)
+				}
 			}
 		}
 		mutatedContainers = append(mutatedContainers, c)
